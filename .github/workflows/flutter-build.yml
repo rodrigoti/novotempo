@@ -15,10 +15,10 @@ on:
         description: "URL da API"
         required: false
         default: "https://api.exemplo.com"
-  push:
-    paths:
-      - "lib/**"
-      - "pubspec.yaml"
+  #push:
+   # paths:
+    #  - "lib/**"
+    #  - "pubspec.yaml"
 
 jobs:
   build:
