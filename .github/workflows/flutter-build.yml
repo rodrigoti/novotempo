@@ -1,0 +1,37 @@
+name: Flutter Build
+
+on:
+  workflow_dispatch: # permite rodar manualmente
+  push:
+    branches:
+      - main  # ou outra branch que você use
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixar código
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Instalar Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0' # ajuste para a versão do seu projeto
+
+      # 3. Instalar dependências
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 4. Rodar build Android (APK)
+      - name: Build APK
+        run: flutter build apk --release
+
+      # 5. Upload do artefato para download no GitHub
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
