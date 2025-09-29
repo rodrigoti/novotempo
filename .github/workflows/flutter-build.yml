@@ -1,10 +1,24 @@
-name: Flutter Build
+name: Flutter Build (Fast)
 
 on:
-  workflow_dispatch: # permite rodar manualmente
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: "Tipo de build (debug ou release)"
+        required: true
+        default: "debug"
+      app_name:
+        description: "Nome do App"
+        required: false
+        default: "MeuApp"
+      api_url:
+        description: "URL da API"
+        required: false
+        default: "https://api.exemplo.com"
   push:
-    branches:
-      - main  # ou outra branch que você use
+    paths:
+      - "lib/**"
+      - "pubspec.yaml"
 
 jobs:
   build:
@@ -13,25 +27,49 @@ jobs:
     steps:
       # 1. Baixar código
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Instalar Flutter
+      # 2. Instalar Flutter (cache automático do SDK)
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.2' # ajuste para a versão do seu projeto
+          flutter-version: '3.35.2' # ajuste para sua versão
 
-      # 3. Instalar dependências
+      # 3. Cache das dependências do pub
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            build
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # 4. Instalar dependências
       - name: Install dependencies
         run: flutter pub get
 
-      # 4. Rodar build Android (APK)
-      - name: Build APK
-        run: flutter build apk --release
+      # 5. Substituir variáveis no código (se quiser usar config.dart)
+      - name: Configurar variáveis no código
+        run: |
+          echo "Substituindo variáveis no código..."
+          sed -i "s|APP_NAME_PLACEHOLDER|${{ github.event.inputs.app_name }}|g" lib/config.dart || true
+          sed -i "s|API_URL_PLACEHOLDER|${{ github.event.inputs.api_url }}|g" lib/config.dart || true
 
-      # 5. Upload do artefato para download no GitHub
+      # 6. Build (debug ou release)
+      - name: Build APK
+        run: |
+          if [ "${{ github.event.inputs.build_mode }}" = "release" ]; then
+            flutter build apk --release
+          else
+            flutter build apk --debug
+          fi
+
+      # 7. Upload artefato (APK)
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: app-${{ github.event.inputs.build_mode }}
+          path: |
+            build/app/outputs/flutter-apk/app-*.apk
