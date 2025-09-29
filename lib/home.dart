@@ -4,6 +4,8 @@ import 'package:radio_player/radio_player.dart';
 import 'funcoes.dart';
 import 'package:http/http.dart' as http;
 
+import 'config.dart';
+
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
 
@@ -178,7 +180,8 @@ class _InicioState extends State<Inicio> {
                                   width: 55,
                                 ),
                                 onTap: () =>
-                                    openUrl('https://www.radiontpe.com.br/'),
+                                   // openUrl('https://www.radiontpe.com.br/'),
+                                    openUrl(App_Config.apiUrl),
                               ),
                             ],
                           ),
